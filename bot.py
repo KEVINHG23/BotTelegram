@@ -6,12 +6,12 @@ app = Flask(__name__)
 VERIFY_TOKEN = "bot123"
 TOKEN = "TU_ACCESS_TOKEN"
 PHONE_NUMBER_ID = "TU_PHONE_NUMBER_ID"
-ADMIN = "3311339673"
+ADMIN = "3311339673"  # ⚠️ SIN 52
 
 bot_activo = False
 
 
-# ✅ VERIFICACION DE META (GET)
+# ✅ VERIFICACION DE META
 @app.route("/webhook", methods=["GET"])
 def verify():
     mode = request.args.get("hub.mode")
@@ -24,6 +24,7 @@ def verify():
         return "Error", 403
 
 
+# ✅ ENVIAR MENSAJE
 def enviar_mensaje(numero, mensaje):
     url = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
 
@@ -42,17 +43,18 @@ def enviar_mensaje(numero, mensaje):
     requests.post(url, headers=headers, json=data)
 
 
-# ✅ MENSAJES QUE LLEGAN
+# ✅ RECIBIR MENSAJES
 @app.route("/webhook", methods=["POST"])
 def webhook():
     global bot_activo
     data = request.get_json()
 
+    print(data)  # 👀 PARA VER EN LOGS
+
     try:
         mensaje = data["entry"][0]["changes"][0]["value"]["messages"][0]["text"]["body"]
         numero = data["entry"][0]["changes"][0]["value"]["messages"][0]["from"]
 
-        # 🔥 IGNORA MAYUSCULAS O MINUSCULAS
         mensaje = mensaje.lower()
 
         if numero == ADMIN:
@@ -69,8 +71,8 @@ def webhook():
             if "hola" in mensaje:
                 enviar_mensaje(numero, "Bienvenido al grupo")
 
-    except:
-        pass
+    except Exception as e:
+        print("Error:", e)
 
     return "ok", 200
 
