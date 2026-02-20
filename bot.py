@@ -10,7 +10,8 @@ ADMIN = "523311339673"
 
 bot_activo = False
 
-# 🔹 VERIFICACION QUE HACE META
+
+# ✅ VERIFICACION DE META (GET)
 @app.route("/webhook", methods=["GET"])
 def verify():
     token = request.args.get("hub.verify_token")
@@ -39,15 +40,18 @@ def enviar_mensaje(numero, mensaje):
     requests.post(url, headers=headers, json=data)
 
 
-# 🔹 MENSAJES QUE LLEGAN DEL GRUPO
+# ✅ MENSAJES QUE LLEGAN
 @app.route("/webhook", methods=["POST"])
 def webhook():
     global bot_activo
     data = request.get_json()
 
     try:
-        mensaje = data["entry"][0]["changes"][0]["value"]["messages"][0]["text"]["body"].lower()
+        mensaje = data["entry"][0]["changes"][0]["value"]["messages"][0]["text"]["body"]
         numero = data["entry"][0]["changes"][0]["value"]["messages"][0]["from"]
+
+        # 🔥 IGNORA MAYUSCULAS O MINUSCULAS
+        mensaje = mensaje.lower()
 
         if numero == ADMIN:
 
