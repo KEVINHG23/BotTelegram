@@ -3,13 +3,26 @@ import requests
 
 app = Flask(__name__)
 
-TOKEN = "TU_WHATSAPP_TOKEN"
-ADMIN = "521XXXXXXXXXX"
+VERIFY_TOKEN = "bot123"
+TOKEN = "TU_ACCESS_TOKEN"
+PHONE_NUMBER_ID = "TU_PHONE_NUMBER_ID"
+ADMIN = "523311339673"
 
 bot_activo = False
 
+# 🔹 VERIFICACION QUE HACE META
+@app.route("/webhook", methods=["GET"])
+def verify():
+    token = request.args.get("hub.verify_token")
+    challenge = request.args.get("hub.challenge")
+
+    if token == VERIFY_TOKEN:
+        return challenge
+    return "Error", 403
+
+
 def enviar_mensaje(numero, mensaje):
-    url = "https://graph.facebook.com/v18.0/TU_PHONE_NUMBER_ID/messages"
+    url = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
 
     headers = {
         "Authorization": f"Bearer {TOKEN}",
@@ -25,10 +38,11 @@ def enviar_mensaje(numero, mensaje):
 
     requests.post(url, headers=headers, json=data)
 
+
+# 🔹 MENSAJES QUE LLEGAN DEL GRUPO
 @app.route("/webhook", methods=["POST"])
 def webhook():
     global bot_activo
-
     data = request.get_json()
 
     try:
@@ -54,4 +68,5 @@ def webhook():
 
     return "ok", 200
 
-app.run(host="0.0.0.0", port=5000)
+
+app.run(host="0.0.0.0", port=10000)
