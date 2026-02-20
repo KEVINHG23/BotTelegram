@@ -40,8 +40,8 @@ def enviar_mensaje(numero, mensaje):
         "text": {"body": mensaje}
     }
 
-    requests.post(url, headers=headers, json=data)
-
+    response = requests.post(url, headers=headers, json=data)
+    print("Respuesta Meta:", response.text)
 
 # ✅ RECIBIR MENSAJES
 @app.route("/webhook", methods=["POST"])
