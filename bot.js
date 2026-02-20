@@ -2,38 +2,46 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 
 const client = new Client({
-    authStrategy: new LocalAuth()
+    authStrategy: new LocalAuth(),
+    puppeteer: {
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+        args: ['--no-sandbox','--disable-setuid-sandbox']
+    }
 });
 
 client.on('qr', qr => {
-    qrcode.generate(qr, {small: true});
+    console.log("ESCANEA EL QR 👇");
+    qrcode.generate(qr, { small: true });
 });
 
 client.on('ready', () => {
-    console.log('BOT LISTO 24/7');
+    console.log('✅ BOT LISTO 24/7');
 });
 
 client.on('message', async msg => {
 
-    let chat = await msg.getChat();
+    const chat = await msg.getChat();
 
     if (!chat.isGroup) return;
 
-    let texto = msg.body.toLowerCase();
+    let texto = msg.body.toLowerCase().trim();
 
-    if (texto.includes("buenos dias") ||
+    // 🔓 ABRIR GRUPO
+    if (
+        texto.includes("buenos dias") ||
         texto.includes("buenas tardes") ||
-        texto.includes("buenas noches")) {
-
+        texto.includes("buenas noches")
+    ) {
         await chat.setMessagesAdminsOnly(false);
         msg.reply("🔓 Grupo abierto");
     }
 
+    // 🔒 CERRAR GRUPO
     if (texto.includes("gracias por su atencion")) {
-
         await chat.setMessagesAdminsOnly(true);
         msg.reply("🔒 Grupo cerrado");
     }
+
 });
 
 client.initialize();
