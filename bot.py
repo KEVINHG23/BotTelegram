@@ -1,35 +1,25 @@
 from flask import Flask, request
-import datetime
 
 app = Flask(__name__)
 
-activo = False
-numero_admin = "3311339673"
-
-@app.route("/")
-def inicio():
+# Ruta principall
+@app.route('/')
+def home():
     return "Bot WhatsApp activo"
 
-@app.route("/mensaje", methods=["POST"])
-def mensaje():
-    global activo
-    
-    texto = request.json.get("texto", "").lower()
-    numero = request.json.get("numero", "")
-    
-    if numero == numero_admin:
-        if "buenos dias" in texto or "buenas tardes" in texto or "buenas noches" in texto:
-            activo = True
-            return "Bot activado"
-        
-        if "gracias por su atencion" in texto:
-            activo = False
-            return "Bot desactivado"
-    
-    if activo:
-        if "hola" in texto:
-            return "Hola, el bot esta activo"
-    
-    return "ok"
+# Webhook para WhatsApp
+@app.route('/webhook', methods=['GET', 'POST'])
+def webhook():
+    if request.method == 'GET':
+        token = request.args.get('hub.verify_token')
+        challenge = request.args.get('hub.challenge')
+        if token == "12345":
+            return challenge
+        return "Token incorrecto"
+    elif request.method == 'POST':
+        data = request.json
+        print("Mensaje recibido:", data)
+        return "ok"
 
-app.run(host="0.0.0.0", port=5000)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
