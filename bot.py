@@ -1,49 +1,35 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request
+import datetime
 
 app = Flask(__name__)
 
 activo = False
 numero_admin = "3311339673"
-VERIFY_TOKEN = "12345"
 
-@app.route("/", methods=["GET"])
-def home():
+@app.route("/")
+def inicio():
     return "Bot WhatsApp activo"
 
-# Verificacion de Meta
-@app.route("/webhook", methods=["GET"])
-def verificar():
-    token = request.args.get("hub.verify_token")
-    challenge = request.args.get("hub.challenge")
-
-    if token == VERIFY_TOKEN:
-        return challenge
-    return "Error"
-
-# Recibir mensajes
-@app.route("/webhook", methods=["POST"])
-def webhook():
+@app.route("/mensaje", methods=["POST"])
+def mensaje():
     global activo
     
-    data = request.json
+    texto = request.json.get("texto", "").lower()
+    numero = request.json.get("numero", "")
     
-    try:
-        mensaje = data["entry"][0]["changes"][0]["value"]["messages"][0]["text"]["body"].lower()
-        numero = data["entry"][0]["changes"][0]["value"]["messages"][0]["from"]
-
-        if numero == numero_admin:
-            if "buenos dias" in mensaje or "buenas tardes" in mensaje or "buenas noches" in mensaje:
-                activo = True
-            
-            if "gracias por su atencion" in mensaje:
-                activo = False
-
-        print("Mensaje:", mensaje)
-        print("Activo:", activo)
-
-    except:
-        pass
-
+    if numero == numero_admin:
+        if "buenos dias" in texto or "buenas tardes" in texto or "buenas noches" in texto:
+            activo = True
+            return "Bot activado"
+        
+        if "gracias por su atencion" in texto:
+            activo = False
+            return "Bot desactivado"
+    
+    if activo:
+        if "hola" in texto:
+            return "Hola, el bot esta activo"
+    
     return "ok"
 
 app.run(host="0.0.0.0", port=5000)
