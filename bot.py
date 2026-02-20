@@ -6,6 +6,10 @@ app = Flask(__name__)
 activo = False
 numero_admin = "3311339673"
 
+@app.route("/")
+def inicio():
+    return "Bot WhatsApp activo"
+
 @app.route("/mensaje", methods=["POST"])
 def mensaje():
     global activo
@@ -13,7 +17,6 @@ def mensaje():
     texto = request.json.get("texto", "").lower()
     numero = request.json.get("numero", "")
     
-    # Activar
     if numero == numero_admin:
         if "buenos dias" in texto or "buenas tardes" in texto or "buenas noches" in texto:
             activo = True
