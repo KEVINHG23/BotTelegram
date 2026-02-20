@@ -14,12 +14,14 @@ bot_activo = False
 # ✅ VERIFICACION DE META (GET)
 @app.route("/webhook", methods=["GET"])
 def verify():
+    mode = request.args.get("hub.mode")
     token = request.args.get("hub.verify_token")
     challenge = request.args.get("hub.challenge")
 
-    if token == VERIFY_TOKEN:
-        return challenge
-    return "Error", 403
+    if mode == "subscribe" and token == VERIFY_TOKEN:
+        return challenge, 200
+    else:
+        return "Error", 403
 
 
 def enviar_mensaje(numero, mensaje):
