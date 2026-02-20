@@ -6,7 +6,7 @@ app = Flask(__name__)
 VERIFY_TOKEN = "bot123"
 TOKEN = "TU_ACCESS_TOKEN"
 PHONE_NUMBER_ID = "TU_PHONE_NUMBER_ID"
-ADMIN = "523311339673"
+ADMIN = "5213311339673"
 
 bot_activo = False
 
