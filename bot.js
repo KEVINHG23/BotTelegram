@@ -1,11 +1,10 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
-
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
         headless: true,
-        // Configuración crítica para que funcione en servidores (Railway/VPS)
+        // Eliminamos la ruta manual y dejamos solo los argumentos de compatibilidad
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -15,9 +14,7 @@ const client = new Client({
             '--no-zygote',
             '--single-process',
             '--disable-gpu'
-        ],
-        // Si sigue fallando el inicio, Railway suele usar esta ruta:
-        executablePath: '/usr/bin/google-chrome-stable' 
+        ]
     }
 });
 
