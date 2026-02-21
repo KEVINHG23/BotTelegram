@@ -1,10 +1,14 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
+
 const client = new Client({
-    authStrategy: new LocalAuth(),
+    // 1. SESIÓN PERSISTENTE: Guarda la conexión para que no pida QR siempre
+    authStrategy: new LocalAuth({
+        clientId: "bot-control-grupos" 
+    }),
     puppeteer: {
         headless: true,
-        // Eliminamos la ruta manual y dejamos solo los argumentos de compatibilidad
+        // Argumentos necesarios para correr en servidores como Railway
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -14,41 +18,43 @@ const client = new Client({
             '--no-zygote',
             '--single-process',
             '--disable-gpu'
-        ]
+        ],
+        // Si Railway te da error de "Browser not found", descomenta la siguiente línea:
+        // executablePath: '/usr/bin/chromium'
     }
 });
 
 client.on('qr', qr => {
-    console.log('--- NUEVO CÓDIGO QR ---');
-    qrcode.generate(qr, {small: true});
-});
-client.on('ready', () => {
-    console.log('¡Bot activado con éxito! Ya puedes cerrar la laptop.');
+    console.log('--- COPIE ESTE QR O ACHIQUE EL ZOOM ---');
+    // 'terminal' genera un QR más denso que suele resistir mejor los logs de la nube
+    qrcode.generate(qr, {short: true}); 
 });
 
+client.on('ready', () => {
+    console.log('¡BOT VINCULADO! Ya puedes cerrar todo, el bot trabajará 24/7.');
+});
+
+// 3. LÓGICA DE CONTROL DE GRUPO
 client.on('message', async msg => {
-    const text = msg.body.toLowerCase().trim(); // Limpia espacios y pasa a minúsculas
+    const text = msg.body.toLowerCase().trim();
     const chat = await msg.getChat();
 
     if (chat.isGroup) {
-        // Obtenemos al emisor del mensaje
         const authorId = msg.author || msg.from;
-        
-        // Buscamos si el emisor es administrador
         const participant = chat.participants.find(p => p.id._serialized === authorId);
         const isAdmin = participant ? (participant.isAdmin || participant.isSuperAdmin) : false;
 
         if (isAdmin) {
-            // COMANDOS DE APERTURA (Buenos días, tardes o noches)
+            // COMANDOS DE APERTURA
             if (text === "buenos dias" || text === "buenas tardes" || text === "buenas noches") {
                 await chat.setMessagesAdminsOnly(false);
-                await msg.reply('✅ *Acción de Admin:* El grupo ha sido ABIERTO. Todos pueden escribir.');
+                await msg.reply('✅ *Acción de Admin:* El grupo ha sido ABIERTO. Ya pueden escribir.');
             }
 
             // COMANDO DE CIERRE
             if (text === "gracias por su atencion") {
                 await chat.setMessagesAdminsOnly(true);
-                await msg.reply('🚫 *Acción de Admin:* El grupo ha sido CERRADO. Solo administradores pueden escribir.');
+                await msg.reply('🚫 *Acción de Admin:* El grupo ha sido CERRADO. Solo admins pueden escribir.');
             }
         }
     }
