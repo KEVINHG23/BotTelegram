@@ -1,14 +1,13 @@
-# Usamos Node 18
+# Usa Node 18
 FROM node:18
 
-# Evitamos que Puppeteer descargue Chromium (ya lo instalamos manual)
+# Evitar que Puppeteer descargue Chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
-# Instalamos Chromium y librerías necesarias
+# Instalar Chromium y librerias necesarias
 RUN apt-get update && apt-get install -y \
     chromium \
-    chromium-browser \
     libglib2.0-0 \
     libnss3 \
     libgconf-2-4 \
@@ -18,25 +17,23 @@ RUN apt-get update && apt-get install -y \
     libxtst6 \
     libxrandr2 \
     libgbm-dev \
-    libatk1.0-0 \
-    libc6 \
     ca-certificates \
     fonts-liberation \
     libappindicator3-1 \
     xdg-utils \
-    --no-install-recommends
+    --no-install-recommends && rm -rf /var/lib/apt/lists/*
 
 # Carpeta de trabajo
 WORKDIR /app
 
-# Copiamos package.json y package-lock.json
+# Copiar package.json y package-lock.json
 COPY package*.json ./
 
-# Instalamos dependencias
+# Instalar dependencias
 RUN npm install
 
-# Copiamos todo el proyecto
+# Copiar todo el codigo
 COPY . .
 
-# Comando para arrancar el bot
+# Comando para ejecutar el bot
 CMD ["node", "bot.js"]
