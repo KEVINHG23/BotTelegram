@@ -19,10 +19,9 @@ const client = new Client({
 });
 
 client.on('qr', qr => {
-    console.log('--- ESCANEA EL CÓDIGO QR ABAJO ---');
+    console.log('--- NUEVO CÓDIGO QR ---');
     qrcode.generate(qr, {small: true});
 });
-
 client.on('ready', () => {
     console.log('¡Bot activado con éxito! Ya puedes cerrar la laptop.');
 });
