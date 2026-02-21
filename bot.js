@@ -24,10 +24,14 @@ const client = new Client({
     }
 });
 
+// 2. GENERACIÓN DEL QR CON LINK DE EMERGENCIA
 client.on('qr', qr => {
-    console.log('--- COPIE ESTE QR O ACHIQUE EL ZOOM ---');
-    // 'terminal' genera un QR más denso que suele resistir mejor los logs de la nube
-    qrcode.generate(qr, {short: true}); 
+    console.log('-----------------------------------------------------');
+    console.log('OPCIÓN 1: Abre este link para ver el QR perfecto:');
+    console.log(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qr)}`);
+    console.log('-----------------------------------------------------');
+    console.log('OPCIÓN 2: Intenta escanear aquí (usa zoom pequeño si se ve mal):');
+    qrcode.generate(qr, {small: true});
 });
 
 client.on('ready', () => {
