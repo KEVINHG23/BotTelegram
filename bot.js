@@ -4,39 +4,55 @@ const qrcode = require('qrcode-terminal');
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+        headless: true,
+        // Configuración crítica para que funcione en servidores (Railway/VPS)
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process',
+            '--disable-gpu'
+        ],
+        // Si sigue fallando el inicio, Railway suele usar esta ruta:
+        executablePath: '/usr/bin/google-chrome-stable' 
     }
 });
 
 client.on('qr', qr => {
-    console.log('ESCANEAME CON TU CELULAR:');
+    console.log('--- ESCANEA EL CÓDIGO QR ABAJO ---');
     qrcode.generate(qr, {small: true});
 });
 
 client.on('ready', () => {
-    console.log('¡Bot en línea y vigilando el grupo!');
+    console.log('¡Bot activado con éxito! Ya puedes cerrar la laptop.');
 });
 
 client.on('message', async msg => {
-    const text = msg.body.toLowerCase(); // Ignora mayúsculas
+    const text = msg.body.toLowerCase().trim(); // Limpia espacios y pasa a minúsculas
     const chat = await msg.getChat();
 
     if (chat.isGroup) {
-        // Verificar si quien escribe es Admin
+        // Obtenemos al emisor del mensaje
         const authorId = msg.author || msg.from;
-        const isAdmin = chat.participants.find(p => p.id._serialized === authorId)?.isAdmin;
+        
+        // Buscamos si el emisor es administrador
+        const participant = chat.participants.find(p => p.id._serialized === authorId);
+        const isAdmin = participant ? (participant.isAdmin || participant.isSuperAdmin) : false;
 
         if (isAdmin) {
-            // COMANDOS DE APERTURA
-            if (text.includes("buenos dias") || text.includes("buenas tardes") || text.includes("buenas noches")) {
+            // COMANDOS DE APERTURA (Buenos días, tardes o noches)
+            if (text === "buenos dias" || text === "buenas tardes" || text === "buenas noches") {
                 await chat.setMessagesAdminsOnly(false);
-                await msg.reply('☀️ *Grupo Abierto.* ¡Ya pueden escribir todos!');
+                await msg.reply('✅ *Acción de Admin:* El grupo ha sido ABIERTO. Todos pueden escribir.');
             }
 
             // COMANDO DE CIERRE
-            if (text.includes("gracias por su atencion")) {
+            if (text === "gracias por su atencion") {
                 await chat.setMessagesAdminsOnly(true);
-                await msg.reply('🌙 *Grupo Cerrado.* Solo administradores pueden escribir ahora.');
+                await msg.reply('🚫 *Acción de Admin:* El grupo ha sido CERRADO. Solo administradores pueden escribir.');
             }
         }
     }
