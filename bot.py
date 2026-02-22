@@ -1,13 +1,17 @@
+import os
 from telegram import Update, ChatPermissions
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
 
-TOKEN = "8473066554:AAEQvU7HYnkDgfd52_vUcgvz5kFsAwnS68c"
-ADMIN_ID = 8133854334  # tu id de telegram
+TOKEN = os.getenv("TOKEN")
+ADMIN_ID = 8133854334
 
 async def manejar(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message:
+        return
+
     texto = update.message.text.lower()
     user_id = update.message.from_user.id
-    chat_id = update.message.chat.idgit 
+    chat_id = update.message.chat.id
 
     if user_id != ADMIN_ID:
         return
@@ -17,11 +21,11 @@ async def manejar(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.set_chat_permissions(chat_id, permisos)
         await update.message.reply_text("Grupo abierto.")
 
-    if texto == "gracias por su atencion":
+    elif texto == "gracias por su atencion":
         permisos = ChatPermissions(can_send_messages=False)
         await context.bot.set_chat_permissions(chat_id, permisos)
         await update.message.reply_text("Grupo cerrado.")
 
 app = ApplicationBuilder().token(TOKEN).build()
-app.add_handler(MessageHandler(filters.TEXT, manejar))
-app.run_polling()
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, manejar))
+app.run_polling(drop_pending_updates=True)
