@@ -2,51 +2,62 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 
 const client = new Client({
-    authStrategy: new LocalAuth({ clientId: "bot-control-grupos" }),
+    authStrategy: new LocalAuth({
+        clientId: "bot-control-grupos"
+    }),
     puppeteer: {
         headless: true,
+        // Intenta usar la variable de entorno de Railway, o por defecto la ruta de Nixpacks
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
         args: [
-            '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage',
-            '--no-zygote', '--single-process', '--disable-gpu'
-        ],
-        executablePath: '/usr/bin/chromium' // Forzado para Railway
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-gpu',
+            '--no-zygote',
+            '--single-process'
+        ]
     }
 });
 
+// Generación de QR con link de apoyo
+client.on('qr', qr => {
+    console.log('--- OPCIÓN 1: ESCANEA ESTE LINK SI EL QR SE VE MAL ---');
+    console.log(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qr)}`);
+    console.log('--- OPCIÓN 2: QR EN CONSOLA ---');
+    qrcode.generate(qr, {small: true});
+});
+
 client.on('ready', () => {
-    console.log('--- EL BOT ESTÁ VIVO Y ESCUCHANDO ---');
+    console.log('--- ¡BOT CONECTADO Y VIGILANDO! ---');
 });
 
 client.on('message', async msg => {
-    const chat = await msg.getChat();
-    const text = msg.body.toLowerCase().trim();
-    
-    // ESTO SALDRÁ EN RAILWAY: Te dirá qué mensaje llegó y de quién
-    console.log(`Mensaje recibido: "${text}" en el chat: ${chat.name}`);
+    try {
+        const chat = await msg.getChat();
+        const text = msg.body.toLowerCase().trim();
 
-    if (chat.isGroup) {
-        const authorId = msg.author || msg.from;
-        
-        // Obtenemos la lista de admins actualizada
-        const participant = chat.participants.find(p => p.id._serialized === authorId);
-        const isAdmin = participant ? (participant.isAdmin || participant.isSuperAdmin) : false;
+        if (chat.isGroup) {
+            const authorId = msg.author || msg.from;
+            const participant = chat.participants.find(p => p.id._serialized === authorId);
+            const isAdmin = participant ? (participant.isAdmin || participant.isSuperAdmin) : false;
 
-        console.log(`¿El que escribió es admin?: ${isAdmin}`);
+            if (isAdmin) {
+                // COMANDOS DE APERTURA
+                if (text.includes("buenos dias") || text.includes("buenas tardes") || text.includes("buenas noches")) {
+                    await chat.setMessagesAdminsOnly(false);
+                    await msg.reply('✅ *Acción de Admin:* Grupo abierto.');
+                }
 
-        if (isAdmin) {
-            // COMANDOS (Usamos .includes para que sea más fácil de detectar)
-            if (text.includes("buenos dias") || text.includes("buenas tardes") || text.includes("buenas noches")) {
-                console.log('Intentando abrir grupo...');
-                await chat.setMessagesAdminsOnly(false);
-                await msg.reply('✅ *Acción de Admin:* El grupo ha sido ABIERTO.');
-            }
-
-            if (text.includes("gracias por su atencion")) {
-                console.log('Intentando cerrar grupo...');
-                await chat.setMessagesAdminsOnly(true);
-                await msg.reply('🚫 *Acción de Admin:* El grupo ha sido CERRADO.');
+                // COMANDO DE CIERRE
+                if (text.includes("gracias por su atencion")) {
+                    await chat.setMessagesAdminsOnly(true);
+                    await msg.reply('🚫 *Acción de Admin:* Grupo cerrado (Solo admins).');
+                }
             }
         }
+    } catch (err) {
+        console.error('Error en el bot:', err);
     }
 });
 
