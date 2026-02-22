@@ -1,16 +1,31 @@
-# nixpacks.toml
-
 [phases.setup]
-nixPkgs = ['nodejs', 'chromium', 'glib', 'nss', 'atk', 'cups', 'dbus', 'libdrm', 'gtk3', 'pango', 'cairo', 'xorg.xorgserver', 'alsa-lib']
+nixPkgs = [
+  "nodejs",
+  "chromium",
+  "glib",
+  "nss",
+  "atk",
+  "cups",
+  "dbus",
+  "libdrm",
+  "gtk3",
+  "pango",
+  "cairo",
+  "xorg.libX11",
+  "xorg.libXcomposite",
+  "xorg.libXdamage",
+  "xorg.libXext",
+  "xorg.libXfixes",
+  "xorg.libXrandr",
+  "mesa",
+  "alsa-lib"
+]
 
 [phases.build]
 cmds = [
   "npm install",
-  "npx puppeteer browsers install chrome"   # ← muy importante: fuerza instalación de Chromium compatible
+  "npx puppeteer browsers install chrome --no-prompt"   # Fuerza instalación de Chromium compatible
 ]
 
 [start]
 cmd = "node bot.js"
-
-[statics]
-# opcional si después quieres exponer algo

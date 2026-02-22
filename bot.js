@@ -7,9 +7,10 @@ const client = new Client({
     }),
     puppeteer: {
         headless: true,
-        executablePath: '/nix/store/*-chromium-*/bin/chromium',  // Railway + Nix lo instala así
-        // O prueba esta variante más segura:
-        // executablePath: await require('puppeteer').executablePath(),  // pero a veces falla
+        // Ruta típica en Railway con nixpacks + chromium instalado
+        executablePath: '/nix/store/*/bin/chromium',  // el * se expande al hash de nix
+        // Alternativa si lo de arriba falla: prueba '/usr/bin/chromium-browser'
+        ignoreHTTPSErrors: true,
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -20,20 +21,24 @@ const client = new Client({
             '--disable-software-rasterizer',
             '--disable-background-timer-throttling',
             '--disable-backgrounding-occluded-windows',
-            '--disable-renderer-backgrounding'
+            '--disable-renderer-backgrounding',
+            '--disable-extensions',
+            '--disable-infobars',
+            '--window-size=1280,800'
         ]
     }
 });
 
 client.on('qr', qr => {
-    console.log('--- OPCIÓN 1: LINK PARA EL QR ---');
+    console.log('--- ESCANEA ESTE QR PARA CONECTAR EL BOT ---');
+    console.log('Opción 1 (link para móvil o PC):');
     console.log(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qr)}`);
-    console.log('--- OPCIÓN 2: QR EN CONSOLA ---');
-    qrcode.generate(qr, {small: true});
+    console.log('\nOpción 2 (QR en consola):');
+    qrcode.generate(qr, { small: true });
 });
 
 client.on('ready', () => {
-    console.log('--- ¡BOT CONECTADO Y VIGILANDO! ---');
+    console.log('✅ BOT CONECTADO CORRECTAMENTE Y VIGILANDO GRUPOS!');
 });
 
 client.on('message', async msg => {
@@ -49,18 +54,28 @@ client.on('message', async msg => {
             if (isAdmin) {
                 if (text.includes("buenos dias") || text.includes("buenas tardes") || text.includes("buenas noches")) {
                     await chat.setMessagesAdminsOnly(false);
-                    await msg.reply('✅ *Acción de Admin:* Grupo abierto.');
+                    await msg.reply('✅ *Acción de Admin:* Grupo ABIERTO para todos.');
                 }
 
                 if (text.includes("gracias por su atencion")) {
                     await chat.setMessagesAdminsOnly(true);
-                    await msg.reply('🚫 *Acción de Admin:* Grupo cerrado.');
+                    await msg.reply('🚫 *Acción de Admin:* Grupo CERRADO (solo admins).');
                 }
             }
         }
     } catch (err) {
-        console.error('Error en el bot:', err);
+        console.error('Error procesando mensaje:', err.message);
     }
 });
 
-client.initialize();
+client.on('auth_failure', () => {
+    console.log('❌ Falló la autenticación - borra la carpeta .wwebjs_auth y vuelve a escanear QR');
+});
+
+client.on('disconnected', (reason) => {
+    console.log('Desconectado:', reason);
+});
+
+client.initialize()
+    .then(() => console.log('Inicialización del cliente iniciada...'))
+    .catch(err => console.error('Error al inicializar:', err));
