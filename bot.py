@@ -2,13 +2,14 @@ import os
 from telegram import Update, ChatPermissions
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
 
-TOKEN = os.getenv("TOKEN")
-ADMIN_ID = 8133854334
+# --------- CONFIGURACION ---------
+TOKEN = "8473066554:AAFzMRlIZVP4ijgkSPahYtptaDr06lYWC7E"
+ADMIN_ID = 8133854334  # tu id de telegram
+PORT = int(os.environ.get("PORT", "8443"))  # Railway asigna el puerto
+WEBHOOK_URL = f"https://bottelegram-production-826d.up.railway.app/{TOKEN}"
 
+# --------- FUNCION PRINCIPAL ---------
 async def manejar(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not update.message:
-        return
-
     texto = update.message.text.lower()
     user_id = update.message.from_user.id
     chat_id = update.message.chat.id
@@ -16,29 +17,23 @@ async def manejar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user_id != ADMIN_ID:
         return
 
-    if texto in ["buenos dias", "buenas tardes", "buenas noches"]:
+    if texto in ["buenos dias", "buenas tardes", "buenas noches", "grupo abierto"]:
         permisos = ChatPermissions(can_send_messages=True)
         await context.bot.set_chat_permissions(chat_id, permisos)
-        await update.message.reply_text("Grupo abierto.")
+        await update.message.reply_text("Grupo abierto. Solo ADMIN puede mandar mensajes.")
 
-    elif texto == "grupo cerrado":
+    if texto in ["gracias por su atencion", "grupo cerrado"]:
         permisos = ChatPermissions(can_send_messages=False)
         await context.bot.set_chat_permissions(chat_id, permisos)
+        await update.message.reply_text("Grupo cerrado. Solo ADMIN puede mandar mensajes.")
 
-        await context.bot.restrict_chat_member(
-            chat_id=chat_id,
-            user_id=ADMIN_ID,
-            permissions=ChatPermissions(can_send_messages=True)
-        )
-
-        await update.message.reply_text("Grupo cerrado. Solo el administrador puede escribir.")
-
+# --------- CONSTRUCCION DE LA APP ---------
 app = ApplicationBuilder().token(TOKEN).build()
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, manejar))
 
-PORT = int(os.environ.get("PORT", 8000))
+# --------- EJECUCION CON WEBHOOK ---------
 app.run_webhook(
     listen="0.0.0.0",
     port=PORT,
-    webhook_url=os.environ.get("RAILWAY_STATIC_URL")
+    webhook_url=WEBHOOK_URL
 )
