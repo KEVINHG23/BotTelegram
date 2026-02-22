@@ -1,81 +1,66 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 
+// --- CONFIGURACIÓN DE TU BOT ---
+const CLAVE_SECRETA = "777"; // Cambia esta clave si quieres
+// -------------------------------
+
 const client = new Client({
-    authStrategy: new LocalAuth({
-        clientId: "bot-control-grupos"
-    }),
+    authStrategy: new LocalAuth({ clientId: "sesion-principal" }),
     puppeteer: {
         headless: true,
-        // Ruta típica en Railway con nixpacks + chromium instalado
-        executablePath: '/nix/store/*/bin/chromium',  // el * se expande al hash de nix
-        // Alternativa si lo de arriba falla: prueba '/usr/bin/chromium-browser'
-        ignoreHTTPSErrors: true,
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-dev-shm-usage',
-            '--disable-gpu',
-            '--no-zygote',
             '--single-process',
-            '--disable-software-rasterizer',
-            '--disable-background-timer-throttling',
-            '--disable-backgrounding-occluded-windows',
-            '--disable-renderer-backgrounding',
-            '--disable-extensions',
-            '--disable-infobars',
-            '--window-size=1280,800'
-        ]
+            '--disable-gpu'
+        ],
+        executablePath: '/usr/bin/chromium'
     }
 });
 
 client.on('qr', qr => {
-    console.log('--- ESCANEA ESTE QR PARA CONECTAR EL BOT ---');
-    console.log('Opción 1 (link para móvil o PC):');
-    console.log(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qr)}`);
-    console.log('\nOpción 2 (QR en consola):');
-    qrcode.generate(qr, { small: true });
+    console.log('--- NUEVO QR (ESCANEALO RÁPIDO) ---');
+    console.log(`LINK: https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qr)}`);
+    qrcode.generate(qr, {small: true});
 });
 
 client.on('ready', () => {
-    console.log('✅ BOT CONECTADO CORRECTAMENTE Y VIGILANDO GRUPOS!');
+    console.log('✅ BOT 100% ACTIVO Y LISTO');
 });
 
 client.on('message', async msg => {
-    try {
-        const chat = await msg.getChat();
-        const text = msg.body.toLowerCase().trim();
+    const text = msg.body.toLowerCase().trim();
+    const chat = await msg.getChat();
 
-        if (chat.isGroup) {
-            const authorId = msg.author || msg.from;
-            const participant = chat.participants.find(p => p.id._serialized === authorId);
-            const isAdmin = participant ? (participant.isAdmin || participant.isSuperAdmin) : false;
+    // COMANDO DE PRUEBA: Escribe ".hola" para saber si el bot está vivo
+    if (text === ".hola") {
+        await msg.reply("👋 ¡Hola! Estoy activo y escuchando.");
+        return;
+    }
 
-            if (isAdmin) {
-                if (text.includes("buenos dias") || text.includes("buenas tardes") || text.includes("buenas noches")) {
-                    await chat.setMessagesAdminsOnly(false);
-                    await msg.reply('✅ *Acción de Admin:* Grupo ABIERTO para todos.');
-                }
-
-                if (text.includes("gracias por su atencion")) {
-                    await chat.setMessagesAdminsOnly(true);
-                    await msg.reply('🚫 *Acción de Admin:* Grupo CERRADO (solo admins).');
-                }
+    if (chat.isGroup) {
+        // APERTURA: "buenos dias 777"
+        if (text.includes("buenos dias") && text.includes(CLAVE_SECRETA)) {
+            try {
+                await chat.setMessagesAdminsOnly(false);
+                await msg.reply('☀️ *GRUPO ABIERTO* (Comando correcto)');
+            } catch (e) {
+                await msg.reply('❌ Error: ¿Me hiciste administrador del grupo?');
             }
         }
-    } catch (err) {
-        console.error('Error procesando mensaje:', err.message);
+
+        // CIERRE: "gracias por su atencion 777"
+        if (text.includes("gracias por su atencion") && text.includes(CLAVE_SECRETA)) {
+            try {
+                await chat.setMessagesAdminsOnly(true);
+                await msg.reply('🌙 *GRUPO CERRADO* (Comando correcto)');
+            } catch (e) {
+                await msg.reply('❌ Error: Asegúrate de que el bot sea administrador.');
+            }
+        }
     }
 });
 
-client.on('auth_failure', () => {
-    console.log('❌ Falló la autenticación - borra la carpeta .wwebjs_auth y vuelve a escanear QR');
-});
-
-client.on('disconnected', (reason) => {
-    console.log('Desconectado:', reason);
-});
-
-client.initialize()
-    .then(() => console.log('Inicialización del cliente iniciada...'))
-    .catch(err => console.error('Error al inicializar:', err));
+client.initialize();

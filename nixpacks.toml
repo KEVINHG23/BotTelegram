@@ -1,31 +1,8 @@
 [phases.setup]
-nixPkgs = [
-  "nodejs",
-  "chromium",
-  "glib",
-  "nss",
-  "atk",
-  "cups",
-  "dbus",
-  "libdrm",
-  "gtk3",
-  "pango",
-  "cairo",
-  "xorg.libX11",
-  "xorg.libXcomposite",
-  "xorg.libXdamage",
-  "xorg.libXext",
-  "xorg.libXfixes",
-  "xorg.libXrandr",
-  "mesa",
-  "alsa-lib"
-]
+nixPkgs = ["nodejs", "chromium", "glib", "nss", "atk"]
 
 [phases.build]
-cmds = [
-  "npm install",
-  "npx puppeteer browsers install chrome --no-prompt"   # Fuerza instalación de Chromium compatible
-]
+cmds = ["npm install"]
 
 [start]
 cmd = "node bot.js"
