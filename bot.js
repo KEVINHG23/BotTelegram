@@ -7,14 +7,20 @@ const client = new Client({
     }),
     puppeteer: {
         headless: true,
-        // Eliminamos la ruta manual /usr/bin/chromium para que el sistema lo encuentre solo
+        executablePath: '/nix/store/*-chromium-*/bin/chromium',  // Railway + Nix lo instala así
+        // O prueba esta variante más segura:
+        // executablePath: await require('puppeteer').executablePath(),  // pero a veces falla
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-dev-shm-usage',
             '--disable-gpu',
             '--no-zygote',
-            '--single-process'
+            '--single-process',
+            '--disable-software-rasterizer',
+            '--disable-background-timer-throttling',
+            '--disable-backgrounding-occluded-windows',
+            '--disable-renderer-backgrounding'
         ]
     }
 });
