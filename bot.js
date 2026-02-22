@@ -50,7 +50,7 @@ client.on('message', async msg => {
 
         if (isAdmin) {
             // COMANDOS DE APERTURA
-            if (text === "buenos dias" || text === "buenas tardes" || text === "buenas noches") {
+                if (text.includes("buenos dias") || text.includes("buenas tardes") || text.includes("buenas noches")){
                 await chat.setMessagesAdminsOnly(false);
                 await msg.reply('✅ *Acción de Admin:* El grupo ha sido ABIERTO. Ya pueden escribir.');
             }
