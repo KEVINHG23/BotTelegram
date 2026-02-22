@@ -39,4 +39,4 @@ async def manejar(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 app = ApplicationBuilder().token(TOKEN).build()
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, manejar))
-app.run_polling(drop_pending_updates=True)
+app.run_polling(drop_pending_updates=True, close_loop=False)
