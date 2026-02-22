@@ -7,7 +7,7 @@ ADMIN_ID = 8133854334  # tu id de telegram
 async def manejar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     texto = update.message.text.lower()
     user_id = update.message.from_user.id
-    chat_id = update.message.chat.id
+    chat_id = update.message.chat.idgit 
 
     if user_id != ADMIN_ID:
         return
